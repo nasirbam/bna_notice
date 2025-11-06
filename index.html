@@ -8,40 +8,45 @@
 <style>
 :root{--accent:#0b5ed7;--muted:#666}
 *{box-sizing:border-box;font-family:'Hind Siliguri',sans-serif}
-body{margin:0;background:#f9f9f9;color:#222}
+body{margin:0;background:linear-gradient(45deg,#f8fafc 0%, #fff 100%);color:#222}
 
-/* Top bar */
-.topbar{background:#0b5ed7;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.topbar button{font-size:20px;background:#fff;color:var(--accent);border-radius:50%;width:30px;height:30px;border:none;cursor:pointer;display:none}
+.topbar{background:#0b5ed7;color:#fff;padding:6px 14px;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.topbar .left{display:flex;gap:12px;align-items:center}
+.topbar a{color:#fff;text-decoration:none}
 
-/* Header */
 .header{display:flex;align-items:center;gap:14px;padding:18px 20px;background:#fff;border-bottom:1px solid #eee}
 .logo{width:72px;height:72px;border-radius:10px;overflow:hidden;flex:0 0 72px;box-shadow:0 6px 18px rgba(11,94,215,.12)}
 .logo img{width:100%;height:100%;object-fit:cover}
+.site-title{line-height:1}
 .site-title h1{margin:0;font-size:20px}
 .site-title p{margin:4px 0 0;color:var(--muted);font-size:14px}
 
 .container{max-width:1100px;margin:24px auto;padding:0 16px}
 .card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(20,20,30,.04);border:1px solid #f0f4ff}
+
 .notice-list{margin-top:18px;display:grid;gap:12px}
 .notice{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;border:1px solid #eef4ff}
 .notice .meta{flex:1}
 .notice .meta h4{margin:0 0 6px;font-size:16px}
 .notice .meta p{margin:0;color:var(--muted);font-size:13px}
 .notice .actions{display:flex;gap:8px}
+
 button, .btn{cursor:pointer;padding:6px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:13px}
 .btn.secondary{background:#666}
 input,textarea{width:100%;padding:8px;border-radius:6px;border:1px solid #ccc;margin-top:4px;margin-bottom:10px;font-size:14px}
 
-/* Modal */
+#adminForm{display:none;margin-bottom:20px}
+
 .modal{position:fixed;inset:0;background:rgba(5,10,20,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:999;}
 .modal.open{display:flex}
-.modal .box{background:#fff;border-radius:10px;max-width:800px;width:100%;max-height:90vh;overflow:auto;padding:12px}
+.modal .box{background:#fff;border-radius:10px;max-width:1000px;width:100%;max-height:90vh;overflow:auto;padding:12px}
 .modal .box header{display:flex;justify-content:space-between;align-items:center}
-.modal .box header h3{margin:0}
-.modal .box header button{background:#0b5ed7;color:#fff;padding:4px 8px;border-radius:6px;cursor:pointer;border:none}
 
-/* Footer */
+#loginOverlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1000}
+#loginOverlay .login-box{background:#fff;padding:24px;border-radius:10px;width:320px;box-shadow:0 6px 18px rgba(0,0,0,.3)}
+#loginOverlay input{width:100%;margin-bottom:12px}
+#loginOverlay button{width:100%}
+
 footer{margin-top:28px;background:#0b5ed7;color:#fff;padding:20px;border-radius:6px}
 @media (max-width:880px){.logo{width:56px;height:56px}}
 </style>
@@ -50,11 +55,16 @@ footer{margin-top:28px;background:#0b5ed7;color:#fff;padding:20px;border-radius:
 
 <!-- Top bar -->
 <div class="topbar">
-  <div>বাংলাদেশ নার্সেস অ্যাসোসিয়েশন (বিএনএ) - ময়মনসিংহ জেলা শাখা</div>
-  <button id="addBtn">+</button>
+  <div class="left">
+    <div style="font-weight:700">বাংলাদেশ নার্সেস অ্যাসোসিয়েশন (বিএনএ)</div>
+    <div style="opacity:.9">ময়মনসিংহ জেলা শাখা</div>
+  </div>
+  <div class="right">
+    <span>যোগাযোগ: <strong>01740264091</strong></span>
+  </div>
 </div>
 
-<!-- Header -->
+<!-- Header / name bar -->
 <div class="header">
   <div class="logo">
     <img src="images/bna_logo.png" alt="BNA Logo">
@@ -66,8 +76,18 @@ footer{margin-top:28px;background:#0b5ed7;color:#fff;padding:20px;border-radius:
 </div>
 
 <main class="container">
+
+  <!-- Admin Form -->
+  <div id="adminForm" class="card">
+    <h3>নতুন নোটিশ এড করুন</h3>
+    <input type="text" id="title" placeholder="নোটিশ শিরোনাম">
+    <textarea id="desc" rows="3" placeholder="সংক্ষিপ্ত বিবরণ (ঐচ্ছিক)"></textarea>
+    <input type="file" id="fileInput">
+    <button onclick="addNotice()">নোটিশ সংরক্ষণ করুন</button>
+  </div>
+
   <div class="card">
-    <h3>সকল নোটিশ / নিউজ</h3>
+    <h3 style="margin:0 0 10px">সকল নোটিশ / নিউজ</h3>
     <div id="list" class="notice-list"></div>
   </div>
 
@@ -80,6 +100,7 @@ footer{margin-top:28px;background:#0b5ed7;color:#fff;padding:20px;border-radius:
       <div style="color:var(--muted);font-size:14px">© <span id="year"></span> সব অধিকার সংরক্ষিত</div>
     </div>
   </footer>
+
 </main>
 
 <!-- Modal viewer -->
@@ -87,32 +108,16 @@ footer{margin-top:28px;background:#0b5ed7;color:#fff;padding:20px;border-radius:
   <div class="box">
     <header>
       <div id="modalTitle" style="font-weight:700"></div>
-      <button onclick="closeModal(event)">বন্ধ করুন</button>
+      <div><button class="btn" onclick="closeModal(event)">বন্ধ করুন</button></div>
     </header>
     <div id="modalBody" style="margin-top:12px"></div>
   </div>
 </div>
 
-<!-- Admin Form Modal -->
-<div id="adminFormModal" class="modal">
-  <div class="box">
-    <header>
-      <h3>নতুন নোটিশ এড করুন</h3>
-      <button onclick="closeAdminModal()">X</button>
-    </header>
-    <div style="margin-top:12px">
-      <input type="text" id="title" placeholder="নোটিশ শিরোনাম">
-      <textarea id="desc" rows="3" placeholder="সংক্ষিপ্ত বিবরণ (ঐচ্ছিক)"></textarea>
-      <input type="file" id="fileInput">
-      <button onclick="addNotice()">নোটিশ সংরক্ষণ করুন</button>
-    </div>
-  </div>
-</div>
-
-<!-- Admin Login Modal -->
-<div id="loginOverlay" class="modal" style="display:flex;">
-  <div class="box">
-    <h3 style="text-align:center;margin-top:0;">Admin Login</h3>
+<!-- Admin Login Overlay -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <h3 style="margin-top:0;text-align:center;">Admin Login</h3>
     <input type="text" id="adminUser" placeholder="Username">
     <input type="password" id="adminPass" placeholder="Password">
     <button onclick="loginAdmin()">Login</button>
@@ -123,26 +128,24 @@ footer{margin-top:28px;background:#0b5ed7;color:#fff;padding:20px;border-radius:
 const $ = id => document.getElementById(id);
 document.getElementById('year').textContent = new Date().getFullYear();
 
-const STORAGE_KEY='bna_notices_v1';
-
-// Load notices
+const STORAGE_KEY = 'bna_notices_v1';
 function loadNotices(){try{const raw=localStorage.getItem(STORAGE_KEY); return raw?JSON.parse(raw):[]}catch(e){return[]}}
 function saveNotices(arr){localStorage.setItem(STORAGE_KEY,JSON.stringify(arr))}
 
-// Render list
 function renderList(){
-  const items=loadNotices();
-  const list=$('list'); list.innerHTML='';
-  if(items.length===0){ list.innerHTML='<div style="color:var(--muted)">কোন নোটিশ পাওয়া যায়নি</div>'; return }
+  const items = loadNotices();
+  const list = $('list');
+  list.innerHTML = '';
+  if(items.length===0){ list.innerHTML = '<div style="color:var(--muted)">কোন নোটিশ পাওয়া যায়নি</div>'; return }
   items.slice().reverse().forEach(item=>{
-    const el=document.createElement('div'); el.className='notice';
-    const meta=document.createElement('div'); meta.className='meta';
-    const h=document.createElement('h4'); h.textContent=item.title; meta.appendChild(h);
-    const p=document.createElement('p'); p.textContent=item.desc||('ফাইল: '+item.fileName); meta.appendChild(p);
-    const actions=document.createElement('div'); actions.className='actions';
-    const view=document.createElement('button'); view.className='btn'; view.textContent='দেখুন';
-    view.onclick=()=>openModal(item);
-    const dl=document.createElement('a'); dl.className='btn secondary'; dl.textContent='ডাউনলোড';
+    const el = document.createElement('div'); el.className='notice';
+    const meta = document.createElement('div'); meta.className='meta';
+    const h = document.createElement('h4'); h.textContent = item.title; meta.appendChild(h);
+    const p = document.createElement('p'); p.textContent = item.desc || ('ফাইল: '+item.fileName); meta.appendChild(p);
+    const actions = document.createElement('div'); actions.className='actions';
+    const view = document.createElement('button'); view.className='btn'; view.textContent='দেখুন';
+    view.onclick = ()=> openModal(item);
+    const dl = document.createElement('a'); dl.className='btn secondary'; dl.textContent='ডাউনলোড';
     dl.href=item.dataURL; dl.download=item.fileName;
     actions.appendChild(view); actions.appendChild(dl);
     el.appendChild(meta); el.appendChild(actions);
@@ -150,11 +153,58 @@ function renderList(){
   });
 }
 
-// Open modal
+function addNotice(){
+  const title = $('title').value.trim();
+  const desc = $('desc').value.trim();
+  const file = $('fileInput').files[0];
+  if(!title || !file){ alert('শিরোনাম এবং ফাইল উভয়ই আবশ্যক।'); return }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const dataURL = e.target.result;
+    const item = {id:Date.now(), title, desc, fileName:file.name, mime:file.type, dataURL};
+    const all = loadNotices(); all.push(item); saveNotices(all);
+    $('title').value=''; $('desc').value=''; $('fileInput').value='';
+    renderList();
+  }
+  reader.readAsDataURL(file);
+}
+
 function openModal(item){
-  const modal=$('modal'); modal.classList.add('open');
-  $('modalTitle').textContent=item.title;
-  const body=$('modalBody'); body.innerHTML='';
-  if(item.mime==='application/pdf'||item.fileName.toLowerCase().endsWith('.pdf')){
+  const modal = $('modal'); modal.classList.add('open');
+  $('modalTitle').textContent = item.title;
+  const body = $('modalBody'); body.innerHTML = '';
+  if(item.mime==='application/pdf' || item.fileName.toLowerCase().endsWith('.pdf')){
     const obj=document.createElement('object'); obj.data=item.dataURL; obj.type='application/pdf'; obj.width='100%'; obj.height='600'; body.appendChild(obj);
-    const a=document.createElement('a'); a.href=item.dataURL; a.download=item.fileName; a.textContent='ফাইল ডাউনলোড করুন'; a.style.display='
+    const a=document.createElement('a'); a.href=item.dataURL; a.download=item.fileName; a.textContent='ফাইল ডাউনলোড করুন'; a.style.display='inline-block'; a.style.marginTop='8px'; a.className='btn'; body.appendChild(a);
+  } else if(item.mime.startsWith('image/') || item.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)){
+    const img=document.createElement('img'); img.src=item.dataURL; img.style.maxWidth='100%'; img.style.borderRadius='8px'; body.appendChild(img);
+    const a=document.createElement('a'); a.href=item.dataURL; a.download=item.fileName; a.textContent='ফাইল ডাউনলোড করুন'; a.style.display='inline-block'; a.style.marginTop='8px'; a.className='btn'; body.appendChild(a);
+  } else {
+    body.innerHTML='<div style="color:var(--muted)">এই ফাইলটি প্রদর্শন করা যাচ্ছে না। <a href="'+item.dataURL+'" download="'+item.fileName+'">ডাউনলোড করুন</a></div>';
+  }
+}
+
+function closeModal(e){if(e && e.target && e.target.closest && e.target.closest('.box')){if(e.target.tagName==='BUTTON') return; return} $('modal').classList.remove('open'); $('modalBody').innerHTML='';}
+
+function loginAdmin(){
+  const user = $('adminUser').value.trim();
+  const pass = $('adminPass').value.trim();
+  // **আপনি চাইলে এখানে ইউজারনেম ও পাসওয়ার্ড পরিবর্তন করতে পারেন**
+  if(user==='admin' && pass==='1234'){
+    sessionStorage.setItem('isAdmin','true');
+    $('adminForm').style.display='block';
+    $('loginOverlay').style.display='none';
+    renderList();
+  } else {
+    alert('ভুল ইউজারনেম অথবা পাসওয়ার্ড');
+  }
+}
+
+// চেক যদি আগেই লগইন থাকে
+if(sessionStorage.getItem('isAdmin')==='true'){ $('adminForm').style.display='block'; $('loginOverlay').style.display='none'; }
+
+renderList();
+</script>
+
+</body>
+</html>
