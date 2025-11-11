@@ -12,7 +12,11 @@ body{margin:0;background:#f8f9ff;color:#111}
 
 /* Top bar */
 .topbar{background:var(--accent);color:#fff;padding:10px 18px;display:flex;justify-content:space-between;align-items:center}
-.topbar button{display:none;background:#fff;color:var(--accent);border:none;font-size:20px;border-radius:50%;width:30px;height:30px;cursor:pointer;font-weight:bold}
+.topbar .admin-panel{display:flex;align-items:center;gap:10px}
+.topbar .admin-panel button{background:#fff;color:var(--accent);border:none;font-size:20px;border-radius:50%;width:30px;height:30px;cursor:pointer;font-weight:bold}
+.topbar .admin-panel .admin-info{display:none;align-items:center;gap:10px}
+.topbar .admin-panel .admin-info span{font-size:14px}
+.topbar .admin-panel .admin-info button{background:transparent;color:#fff;border:1px solid #fff;font-size:12px;padding:4px 8px;border-radius:4px;width:auto;height:auto}
 
 /* Header */
 .header{background:#fff;padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:14px}
@@ -33,6 +37,7 @@ body{margin:0;background:#f8f9ff;color:#111}
 input,textarea{width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:6px}
 button{padding:6px 12px;background:var(--accent);border:none;color:#fff;border-radius:6px;cursor:pointer}
 button.delete{background:#d93025}
+button.secondary{background:#6c757d}
 
 /* Footer */
 footer{margin-top:24px;background:#0b5ed7;color:#fff;padding:14px;text-align:center;border-radius:6px}
@@ -42,7 +47,14 @@ footer{margin-top:24px;background:#0b5ed7;color:#fff;padding:14px;text-align:cen
 
 <div class="topbar">
   <div>বাংলাদেশ নার্সেস অ্যাসোসিয়েশন (বিএনএ) - ময়মনসিংহ</div>
-  <button id="addBtn">+</button>
+  <div class="admin-panel">
+    <div class="admin-info">
+      <span id="adminName">এডমিন</span>
+      <button id="addBtn">+</button>
+      <button id="logoutBtn">লগ আউট</button>
+    </div>
+    <button id="loginBtn">+</button>
+  </div>
 </div>
 
 <div class="header">
@@ -70,17 +82,18 @@ footer{margin-top:24px;background:#0b5ed7;color:#fff;padding:14px;text-align:cen
     <textarea id="desc" rows="3" placeholder="বিবরণ (ঐচ্ছিক)"></textarea>
     <input type="file" id="fileInput">
     <button onclick="saveNotice()">সংরক্ষণ</button>
-    <button onclick="closeModal()" class="delete">বন্ধ করুন</button>
+    <button onclick="closeModal()" class="secondary">বন্ধ করুন</button>
   </div>
 </div>
 
 <!-- Admin Login Modal -->
-<div id="loginModal" class="modal" style="display:flex;">
+<div id="loginModal" class="modal">
   <div class="box">
     <h3>Admin Login</h3>
     <input type="text" id="adminUser" placeholder="Username">
     <input type="password" id="adminPass" placeholder="Password">
     <button onclick="loginAdmin()">Login</button>
+    <button onclick="closeLoginModal()" class="secondary">বন্ধ করুন</button>
   </div>
 </div>
 
@@ -103,17 +116,34 @@ function renderNotices(){
   if(notices.length===0){list.innerHTML='<p style="color:gray;">কোন নোটিশ নেই</p>';return;}
   notices.slice().reverse().forEach((n,i)=>{
     const div=document.createElement('div');div.className='notice';
-    div.innerHTML=`<div><h3>${n.title}</h3><p>${n.desc||''}</p></div>`;
+    div.innerHTML=`<div><h3>${n.title}</h3><p>${n.desc||''}</p><small>তারিখ: ${n.date || 'অজানা'}</small></div>`;
     const btns=document.createElement('div');
+    
+    // View/Download button for everyone
     const view=document.createElement('a');
-    view.textContent='দেখুন';view.className='btn';view.href=n.dataURL;view.target='_blank';view.download=n.fileName;
+    view.textContent='দেখুন / ডাউনলোড';
+    view.className='btn';
+    view.href=n.dataURL;
+    view.target='_blank';
+    view.download=n.fileName;
+    view.style.marginRight = '10px';
+    view.style.textDecoration = 'none';
+    view.style.padding = '6px 12px';
+    view.style.background = '#0b5ed7';
+    view.style.color = 'white';
+    view.style.borderRadius = '6px';
+    view.style.fontSize = '14px';
     btns.appendChild(view);
-    if(sessionStorage.getItem('isAdmin')==='true'){
+    
+    // Delete button only for admin
+    if(isAdmin()){
       const del=document.createElement('button');
-      del.textContent='মুছুন';del.className='delete';
+      del.textContent='মুছুন';
+      del.className='delete';
       del.onclick=()=>{deleteNotice(i)};
       btns.appendChild(del);
     }
+    
     div.appendChild(btns);
     list.appendChild(div);
   });
@@ -121,13 +151,30 @@ function renderNotices(){
 
 // Save new notice
 function saveNotice(){
-  const title=$('title').value.trim(); if(!title){alert('শিরোনাম দিন');return;}
-  const file=$('fileInput').files[0]; if(!file){alert('ফাইল নির্বাচন করুন');return;}
+  const title=$('title').value.trim(); 
+  if(!title){alert('শিরোনাম দিন');return;}
+  const file=$('fileInput').files[0]; 
+  if(!file){alert('ফাইল নির্বাচন করুন');return;}
+  
   const reader=new FileReader();
   reader.onload=function(e){
-    const data={title,desc:$('desc').value.trim(),fileName:file.name,mime:file.type,dataURL:e.target.result};
-    const notices=getNotices();notices.push(data);saveAll(notices);
-    closeModal();renderNotices();
+    const data={
+      title, 
+      desc:$('desc').value.trim(), 
+      fileName:file.name, 
+      mime:file.type, 
+      dataURL:e.target.result,
+      date: new Date().toLocaleDateString('bn-BD')
+    };
+    const notices=getNotices();
+    notices.push(data);
+    saveAll(notices);
+    closeModal();
+    renderNotices();
+    // Reset form
+    $('title').value = '';
+    $('desc').value = '';
+    $('fileInput').value = '';
   }
   reader.readAsDataURL(file);
 }
@@ -135,30 +182,68 @@ function saveNotice(){
 // Delete
 function deleteNotice(i){
   if(!confirm('আপনি কি সত্যিই এই নোটিশ মুছতে চান?'))return;
-  const n=getNotices();n.splice(n.length-1-i,1);saveAll(n);renderNotices();
+  const n=getNotices();
+  n.splice(n.length-1-i,1);
+  saveAll(n);
+  renderNotices();
 }
 
 // Modal controls
 function closeModal(){$('addModal').classList.remove('open')}
-$('addBtn').onclick=()=>$('addModal').classList.add('open');
+function closeLoginModal(){$('loginModal').classList.remove('open')}
+
+$('addBtn').onclick=()=>{
+  $('addModal').classList.add('open');
+};
+
+$('loginBtn').onclick=()=>{
+  $('loginModal').classList.add('open');
+};
+
+// Admin functions
+function isAdmin() {
+  return sessionStorage.getItem('isAdmin') === 'true';
+}
+
+function updateAdminUI() {
+  if(isAdmin()) {
+    $('loginBtn').style.display='none';
+    $('.admin-info').style.display='flex';
+  } else {
+    $('loginBtn').style.display='inline-block';
+    $('.admin-info').style.display='none';
+  }
+}
 
 // Admin Login
 function loginAdmin(){
   const u=$('adminUser').value.trim(),p=$('adminPass').value.trim();
   if(u===ADMIN_USER && p===ADMIN_PASS){
     sessionStorage.setItem('isAdmin','true');
-    $('loginModal').style.display='none';
-    $('addBtn').style.display='inline-block';
+    updateAdminUI();
     renderNotices();
-  }else alert('ভুল Username বা Password');
+    closeLoginModal();
+    // Clear login form
+    $('adminUser').value = '';
+    $('adminPass').value = '';
+  } else {
+    alert('ভুল Username বা Password');
+  }
+}
+
+// Admin Logout
+function logoutAdmin(){
+  sessionStorage.removeItem('isAdmin');
+  updateAdminUI();
+  renderNotices();
 }
 
 // Initialize
-if(sessionStorage.getItem('isAdmin')==='true'){
-  $('loginModal').style.display='none';
-  $('addBtn').style.display='inline-block';
-}
+updateAdminUI();
 renderNotices();
+
+// Event listeners
+$('logoutBtn').onclick = logoutAdmin;
 </script>
 </body>
 </html>
